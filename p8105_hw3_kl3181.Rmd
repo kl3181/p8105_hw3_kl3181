@@ -4,9 +4,22 @@ author: Kelley Lou
 output: github_document
 ---
 
-```{r setup}
+```{r setup, include=FALSE}
 library(tidyverse)
 library(p8105.datasets)
+
+knitr::opts_chunk$set(
+	fig.width = 6, 
+  fig.asp = .6,
+  out.width = "90%"
+)
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
 ```
 
 ##Problem 1
@@ -15,13 +28,16 @@ Load in dataset.
 data("instacart")
 ```
 
+This dataset contains `r nrow(instacart)` rows and `r ncol(instacart)` columns. Observations are the level of items in orders by user. There are user / order variables -- user ID, order ID, order day, and order hour. There are also item variables -- name, aisle, department, and some numeric codes. 
+
+How many aisles and which are most items from?
 ```{r}
 instacart %>% 
   count(aisle) %>% 
   arrange(desc(n))
 ```
 
-Plot
+Making a plot for number of items ordered in each aisle. 
 ```{r}
 instacart %>% 
   count(aisle) %>% 
@@ -35,7 +51,7 @@ instacart %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
 
-3 popular: how many are ordered, top (COUNT, RANK)
+Making a plot to show the three most popular items. 
 ```{r}
 instacart %>% 
   filter(aisle %in% c("baking ingredients", "dog food care", "pacakaged vegetables fruits")) %>% 
@@ -47,7 +63,7 @@ instacart %>%
   knitr::kable()
 ```
 
-Apples vs. ice cream.
+Making a table to compare mean hour of the day at which apples and ice cream are ordered.
 ```{r}
 instacart %>% 
   filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>% 
@@ -60,10 +76,64 @@ instacart %>%
 ```
 
 ##Problem 2
+Load in the dataset.
+```{r}
+accel_df = 
+  read_csv(
+    "./accel_data.csv") %>% 
+  janitor::clean_names() %>%
+  mutate(
+    weekday = if_else(day %in% c("Saturday","Sunday"), "Weekend", "Weekday"),
+  ) %>% 
+  pivot_longer(
+    activity_1:activity_1440,
+    names_to = "minute",
+    values_to = "activity_count"
+  ) %>% 
+```
+activity count and minute variables, add new variable (saturday and sunday are weekend- mutate), 
+encode with variable classes (activity count - number, day - character or factor, is order correct?)
+is minute of the day numerical? SHOULD NOT BE CHARACTER
 
+total activity variable = 
+group_by(week, day)
+summarize (mean activity count)
+35 days - total activity count
+make the table easier to read (week number, day of week, activity count)
+dow as a column - use a factor to make sure the order is not alphabetical
+
+single-panel plot = 
+ggplot
+24 hr of activity, what does it look like at each minute of each day
+  min = x, activity count = y
+geom_line
+aes color= dow
 
 ##Problem 3
 ```{r}
 data("ny_noaa")
 ```
+separate to get three variables year month and day
+check in NY NOAA dataset description to see if the unit is reasonable for temp, precipitation, snowfall - convert to degrees (not tenths)
+snowfall values (count) 
 
+two panel plot = 
+data manipulation
+  filter jan and july
+  group by station, year, month
+  summarize average max temp
+ggplot 
+  plot time course for station 1, 2, 3, 4, 5
+  average max temp over years, separately for each station (TWO PANEL)
+  faceting for two panel
+  global warming? are some stations always colder than others?
+  
+two panel plot = 
+  two distinct plots, then join them (patchwork)
+  tmax vs. tmin
+    hex plot 
+  snowfall > 0, <100
+    filter 
+    box plot, violin plot, ridge plot
+    one box for each year
+  
