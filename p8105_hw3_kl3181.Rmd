@@ -22,7 +22,8 @@ scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
 ```
 
-##Problem 1
+### Problem 1
+
 Load in dataset.
 ```{r}
 data("instacart")
@@ -75,8 +76,9 @@ instacart %>%
   )
 ```
 
-##Problem 2
-Load in the dataset.
+### Problem 2
+
+##### Load in the dataset and tidy.
 ```{r}
 accel_df = 
   read_csv(
@@ -87,32 +89,60 @@ accel_df =
   ) %>% 
   pivot_longer(
     activity_1:activity_1440,
-    names_to = "minute",
+    names_to = "activity",
     values_to = "activity_count"
   ) %>% 
+  separate(activity, into = c("activity", "minute")) %>% 
+  select(-activity) %>% 
+  mutate(
+    minute = as.numeric(minute),
+    day = as.factor(day),
+    day = forcats::fct_relevel(day, c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
+  )
 ```
-activity count and minute variables, add new variable (saturday and sunday are weekend- mutate), 
-encode with variable classes (activity count - number, day - character or factor, is order correct?)
-is minute of the day numerical? SHOULD NOT BE CHARACTER
+The resulting dataset has `r nrow(accel_df)` rows and `r ncol(accel_df)` columns. The columns include information for a 63 year old male with a BMI of 25, with CHF who wore an accelerometer for 5 weeks. The data include the week, day of the week, whether it is a weekday or weekend, minute of the day as well as the activity count.
 
-total activity variable = 
-group_by(week, day)
-summarize (mean activity count)
-35 days - total activity count
-make the table easier to read (week number, day of week, activity count)
-dow as a column - use a factor to make sure the order is not alphabetical
+##### Creating a total activity variable
+```{r}
+accel_df %>% 
+  group_by(week, day) %>% 
+  summarize(total_activity = sum(activity_count)) %>% 
+  mutate(
+    total_activity = round(total_activity, digits = 0)
+  ) %>% 
+  knitr::kable()
+```
+We can see that there are specifically two days of lower activity, notably the last two Saturdays in weeks 4 and 5. Similarly, the last two Sundays also had lower activity than previous weeks.It also looks like levels of activity are pretty similar for Tuesdays, Wednesdays and Thursdays with more varying activity for Mondays and Fridays. 
 
-single-panel plot = 
-ggplot
-24 hr of activity, what does it look like at each minute of each day
-  min = x, activity count = y
-geom_line
-aes color= dow
+##### Now create a plot of 24 hour time activity.
+```{r}
+accel_df %>% 
+  ggplot(aes(x = minute, y = activity_count)) +
+  geom_line(aes(color = day), alpha = 0.3) +
+  scale_x_continuous(
+    breaks = c(0, 240, 480, 720, 960, 1200, 1440),
+    labels = c("00:00", "4:00", "8:00", "12:00", "16:00", "20:00", "23:59")
+  ) +
+  labs(
+    title = "Activity levels over 24 hours by day of the week",
+    x = "Time of day",
+    y = "Level of activity"
+  )
+```
+Based on this graphic, we can see that most of the activity is around 1250, with a few days that have heightened activity. For example, there is more activity on Sunday around 11:00 AM and also more activity in the evenings on Friday. As expected, there is much less activity in the late evening and early morning hours.
 
-##Problem 3
+### Problem 3
+
+##### Load in the dataset.
 ```{r}
 data("ny_noaa")
 ```
+This dataset consists of five variables for all New York state weather stations from January 1, 1981 through December 31, 2010. There are `r nrow(ny_noaa)` rows and `r ncol(ny_noaa)` columns. Key variables consist of the weather station ID, observation date, precipitation, snowfall, snow depth, and minimum and maximum temperatures. However, the weather stations do not collect all of these variables, and therefore there is a lot of missing data. 
+
+##### Tidy the dataset.
+```{r}
+```
+
 separate to get three variables year month and day
 check in NY NOAA dataset description to see if the unit is reasonable for temp, precipitation, snowfall - convert to degrees (not tenths)
 snowfall values (count) 
