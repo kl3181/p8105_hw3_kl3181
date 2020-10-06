@@ -5,7 +5,65 @@ output: github_document
 ---
 
 ```{r setup}
-
+library(tidyverse)
+library(p8105.datasets)
 ```
 
+##Problem 1
+Load in dataset.
+```{r}
+data("instacart")
+```
+
+```{r}
+instacart %>% 
+  count(aisle) %>% 
+  arrange(desc(n))
+```
+
+Plot
+```{r}
+instacart %>% 
+  count(aisle) %>% 
+  filter(n > 1000) %>% 
+  mutate(
+    aisle = factor(aisle),
+    aisle = fct_reorder(aisle, n)
+  ) %>% 
+  ggplot(aes(x = aisle, y = n)) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
+
+3 popular: how many are ordered, top (COUNT, RANK)
+```{r}
+instacart %>% 
+  filter(aisle %in% c("baking ingredients", "dog food care", "pacakaged vegetables fruits")) %>% 
+  group_by(aisle) %>% 
+  count(product_name) %>% 
+  mutate(rank = min_rank(desc(n))) %>% 
+  filter(rank < 4) %>% 
+  arrange(aisle, rank) %>% 
+  knitr::kable()
+```
+
+Apples vs. ice cream.
+```{r}
+instacart %>% 
+  filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>% 
+  group_by(product_name, order_dow) %>% 
+  summarize(mean_hour = mean(order_hour_of_day)) %>% 
+  pivot_wider(
+    names_from = order_dow,
+    values_from = mean_hour
+  )
+```
+
+##Problem 2
+
+
+##Problem 3
+```{r}
+data("ny_noaa")
+```
 
