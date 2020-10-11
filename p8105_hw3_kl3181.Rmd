@@ -110,6 +110,10 @@ accel_df %>%
   mutate(
     total_activity = round(total_activity, digits = 0)
   ) %>% 
+  pivot_wider(
+    names_from = day,
+    values_from = total_activity
+  ) %>% 
   knitr::kable()
 ```
 We can see that there are specifically two days of lower activity, notably the last two Saturdays in weeks 4 and 5. Similarly, the last two Sundays also had lower activity than previous weeks.It also looks like levels of activity are pretty similar for Tuesdays, Wednesdays and Thursdays with more varying activity for Mondays and Fridays. 
@@ -119,6 +123,7 @@ We can see that there are specifically two days of lower activity, notably the l
 accel_df %>% 
   ggplot(aes(x = minute, y = activity_count)) +
   geom_line(aes(color = day), alpha = 0.3) +
+  geom_smooth(size = 0.2) +
   scale_x_continuous(
     breaks = c(0, 240, 480, 720, 960, 1200, 1440),
     labels = c("00:00", "4:00", "8:00", "12:00", "16:00", "20:00", "23:59")
@@ -144,7 +149,6 @@ This dataset consists of five variables for all New York state weather stations 
 noaa_tidy =
 ny_noaa %>% 
   janitor::clean_names() %>% 
-  drop_na() %>% 
   separate(date, into = c("year", "month", "day"), sep = "-") %>% 
   mutate(
     year = as.integer(year),
@@ -162,16 +166,17 @@ noaa_tidy %>%
   count(snow, name = "n_obs") %>% 
   arrange(desc(n_obs))
 ```
-The most common observed value is 0 centimeters of snowfall with 2008508 observations. The most common snowfall is 25 millimieters with 31022. It is likely these are the most common values because for most days out of the year there is no snow or some stations are less likely to have snow than others.
+The most common observed value is 0 centimeters of snowfall with 2008508 observations and NA. The most common snowfall is 25 millimieters with 31022. It is likely these are the most common values because for most days out of the year there is no snow or some stations are less likely to have snow than others.
 
 ##### Making a two-panel plot to show the average *max* temperature in January and July.
 ```{r}
 noaa_tidy %>%
   group_by(id, year, month) %>%  
-  summarize(average_max_temp = mean(tmax)) %>% 
+  summarize(average_max_temp = mean(tmax, na.rm = TRUE)) %>% 
   filter(month %in% c("1", "7")) %>% 
-  ggplot(aes(x = id, y = average_max_temp, color = year)) +
-  geom_point(alpha = 0.5, size = 0.5) +
+  ggplot(aes(x = year, y = average_max_temp, group = id)) +
+  geom_point(alpha = 0.15, size = 0.5) +
+  geom_smooth(se = FALSE) +
   facet_grid(. ~ month) +
   labs(
     title = "Average max temperature over time in January and July",
@@ -186,24 +191,32 @@ library(patchwork)
 
 temperature_p = 
   noaa_tidy %>% 
-  ggplot(aes(x = tmax, y = tmin)) +
+  ggplot(aes(x = tmin, y = tmax)) +
   geom_hex() +
   labs(
-    title = "Maximum vs minimum temperatures"
+    title = "Maximum vs minimum temperatures",
+    x = "Minimum daily temperature (C)",
+    y = "Maximum daily temperature (C)"
   ) +
   theme(plot.title = element_text(size = 10))
 
 snow_p = 
   noaa_tidy %>% 
   filter(snow > 0, snow < 100) %>% 
+  mutate(year = factor(year)) %>% 
   ggplot(aes(x = year, y = snow)) +
-  geom_violin() +
+  geom_boxplot() +
   labs(
-    title = "Distribution of snowfall over time"
+    title = "Distribution of snowfall over time",
+    x = "Year",
+    y = "Snowfall"
   ) +
-  theme(plot.title = element_text(size = 10))  
+  theme(
+    plot.title = element_text(size = 10),
+    axis.text.x = element_text(angle = 90)
+  )  
 
-temperature_p + snow_p
+temperature_p / snow_p
 ```
 
   
